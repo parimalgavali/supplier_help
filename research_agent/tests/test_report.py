@@ -173,6 +173,18 @@ def test_markdown_injection_in_titles_is_escaped():
     assert "](https://evil.example)" not in md
 
 
+def test_markdown_injection_in_source_url_is_neutralised():
+    r = _result()
+    r.sources[1].url = "https://example.com/a>[x](https://evil.example) <b>\nmore"
+    r.sources[2].url = "javascript:alert(1)>[y](https://evil.example)"
+    sources = render_markdown(r).split("**Sources**", 1)[1]
+    outside_autolinks = re.sub(r"<https?://[^<>\s]*>", "", sources)
+    assert not re.search(r"(?<!\\)\]\(https://evil", outside_autolinks)
+    assert "<https://example.com/a%3E[x](https://evil.example)%20%3Cb%3E%0Amore>" in sources
+    assert "<javascript:" not in sources
+    assert "javascript:alert(1)\\>\\[y\\](https://evil.example)" in sources
+
+
 def test_unverified_source_gets_yellow_marker_inline_and_in_sources():
     r = _result()
     r.sources[1].trust = "unverified"

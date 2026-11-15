@@ -45,6 +45,8 @@ The original dataset is synthetic and lacks raw evidence, dates and a published 
 
 This is a loopback-only development application, not the deployed authenticated jury app. There are no supplier contacts, automated approvals, certification verification guarantees, scheduled monitoring or production procurement writes. Source material is untrusted evidence. Public search does not provide sanctions clearance or legal advice. Exact company, site, component and transaction scope still require buyer review.
 
+Exports treat fetched text as untrusted. In the Markdown report, titles and quotes are escaped, and source URLs become links only if they pass the same http(s) check as the HTML report; `<`, `>`, spaces and control characters are percent-encoded so a URL cannot close its link early. Other URLs are printed as escaped text.
+
 Search excerpts and cited URLs are not equivalent to auditing complete source documents. The report must retain the retrieval limitation; assess the original source before a high-consequence decision. Model extraction can still misread relevant evidence even when the URL is real. A failed or incomplete search is recorded as a gap.
 
 Local runs and saved records persist in ignored `.local/research-agent/`. Keep that directory private when it contains sensitive sourcing notes. The provided CSV stays byte-for-byte unchanged.
