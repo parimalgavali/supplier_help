@@ -12,7 +12,7 @@ from typing import Any
 
 from .models import ResearchResult
 from .report_data import build_sections
-from .report_html import Evidence
+from .report_html import Evidence, safe_url
 
 UNVERIFIED_MARK = "🟨"
 UNVERIFIED_TEXT = "not in our trusted source list"
@@ -27,6 +27,17 @@ _MD_SPECIAL = re.compile(r"([\\`*_\[\]<>|#])")
 def esc(text: str) -> str:
     """Escape Markdown/HTML so fetched titles or summaries cannot inject links or markup."""
     return _MD_SPECIAL.sub(r"\\\1", " ".join(str(text).split()))
+
+
+_AUTOLINK_UNSAFE = re.compile(r"[<>\s\x00-\x1f\x7f]")
+
+
+def md_url(url: str) -> str:
+    """http(s) URLs become an autolink that cannot be closed early; anything else is escaped text."""
+    href = safe_url(str(url or ""))
+    if not href:
+        return esc(url or "")
+    return "<" + _AUTOLINK_UNSAFE.sub(lambda m: "".join(f"%{b:02X}" for b in m.group().encode()), href) + ">"
 
 
 def plural(n: int, singular: str, plural_form: str | None = None) -> str:
@@ -222,7 +233,7 @@ def _render(sections: list[dict[str, Any]], r: ResearchResult) -> str:
     for src in s["sources"]:
         quotes = "".join(f" “{esc(q)}”" for q in src["quotes"])
         L.append(f"{src['num']}. {src['trust_label']} · {esc(src['title'])} — {esc(src['publisher'])}, "
-                 f"{src['published'] or 'date not stated'} (accessed {src['accessed']}). <{src['url']}>{quotes}")
+                 f"{src['published'] or 'date not stated'} (accessed {src['accessed']}). {md_url(src['url'])}{quotes}")
     if s["uncited"] > 0:
         L += ["", f"{plural(int(s['uncited']), 'further source')} checked but not cited."]
     f = by["footer"]
